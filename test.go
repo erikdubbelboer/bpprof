@@ -8,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/erikdubbelboer/bpprof"
+	_ "net/http/pprof"
 )
 
 var memSink interface{}
