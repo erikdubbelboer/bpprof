@@ -4,22 +4,18 @@ bpprof
 
 Just like `net/http/pprof` but with nicer formatting.
 
-And sorting by total number of objects allocated (more in future) instead of active objects.
-
 And it groups allocations by stack trace. `net/http/pprof` groups allocations by a [combination of stack trace and size of the allocation](https://github.com/golang/go/blob/f9ed2f75c43cb8745a1593ec3e4208c46419216a/src/runtime/mprof.go#L157) which can result in a lot of duplicate stack traces in the output.
 
-`bpprof`
+And sorting:
+* `inusebytes` for the number of bytes in use.
+* `allocbytes` for the total number of bytes allocated.
+* `inuseobjects` for the number of objects in use.
+* `allocobjects` for the total number of objects allocated.
+
+Example output:
 ```
 heap profile: 1: 384 [1300: 1292864] @ heap/1048576
 # heap profile: 1: 384.00B [1300: 1.23MB] @ heap/1048576
-
-0: 0 [1261: 1291264] @ 0x43fc75 0x401055 0x45d951
-# 0: 0.00B [1261: 1.23MB]
-# 0x401055  main.alloc+0x55 /home/erik/src/github.com/erikdubbelboer/bpprof/test.go:21
-
-0: 0 [38: 1216] @ 0x40c5b9 0x401096 0x45d951
-# 0: 0.00B [38: 1.19KB]
-# 0x401096  main.alloc+0x96 /home/erik/src/github.com/erikdubbelboer/bpprof/test.go:21
 
 1: 384 [1: 384] @ 0x433d57 0x42859f 0x42e4b0 0x42e059 0x45b132
 # 1: 384.00B [1: 384.00B]
@@ -28,6 +24,14 @@ heap profile: 1: 384 [1300: 1292864] @ heap/1048576
 # 0x42e4b0  runtime.mcommoninit+0x100 /home/erik/go1.5rc1/src/runtime/proc1.go:114
 # 0x42e059  runtime.schedinit+0x79    /home/erik/go1.5rc1/src/runtime/proc1.go:57
 # 0x45b132  runtime.rt0_go+0x132    /home/erik/go1.5rc1/src/runtime/asm_amd64.s:109
+
+0: 0 [1261: 1291264] @ 0x43fc75 0x401055 0x45d951
+# 0: 0.00B [1261: 1.23MB]
+# 0x401055  main.alloc+0x55 /home/erik/src/github.com/erikdubbelboer/bpprof/test.go:21
+
+0: 0 [38: 1216] @ 0x40c5b9 0x401096 0x45d951
+# 0: 0.00B [38: 1.19KB]
+# 0x401096  main.alloc+0x96 /home/erik/src/github.com/erikdubbelboer/bpprof/test.go:21
 
 
 # runtime.MemStats

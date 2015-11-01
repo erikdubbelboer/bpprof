@@ -36,11 +36,23 @@ func (x byInUseBytes) Len() int           { return len(x) }
 func (x byInUseBytes) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 func (x byInUseBytes) Less(i, j int) bool { return x[i].InUseBytes() > x[j].InUseBytes() }
 
+type byAllocBytes []runtime.MemProfileRecord
+
+func (x byAllocBytes) Len() int           { return len(x) }
+func (x byAllocBytes) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x byAllocBytes) Less(i, j int) bool { return x[i].AllocBytes > x[j].AllocBytes }
+
 type byAllocObjects []runtime.MemProfileRecord
 
 func (x byAllocObjects) Len() int           { return len(x) }
 func (x byAllocObjects) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 func (x byAllocObjects) Less(i, j int) bool { return x[i].AllocObjects > x[j].AllocObjects }
+
+type byInUseObjects []runtime.MemProfileRecord
+
+func (x byInUseObjects) Len() int           { return len(x) }
+func (x byInUseObjects) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x byInUseObjects) Less(i, j int) bool { return x[i].InUseObjects() > x[j].InUseObjects() }
 
 // From: https://github.com/golang/go/blob/6b8762104a90c93ebd51149e7a031738832c5cdc/src/runtime/pprof/pprof.go#L326
 // printStackRecord prints the function + source line information
@@ -130,7 +142,16 @@ func Heap(w http.ResponseWriter, r *http.Request) {
 		p = append(p, r)
 	}
 
-	sort.Sort(byAllocObjects(p))
+	switch r.FormValue("sort") {
+	default:
+		sort.Sort(byInUseBytes(p))
+	case "allocbytes":
+		sort.Sort(byAllocBytes(p))
+	case "allocobjects":
+		sort.Sort(byAllocObjects(p))
+	case "inuseobjects":
+		sort.Sort(byInUseObjects(p))
+	}
 
 	tw := tabwriter.NewWriter(w, 1, 8, 1, '\t', 0)
 
