@@ -4,6 +4,8 @@ bpprof
 
 Just like `net/http/pprof` but with nicer formatting.
 
+The HTTP endpoint will be like `/debug/bpprof/heap?sort=allocobjects`
+
 And it groups allocations by stack trace. `net/http/pprof` groups allocations by a [combination of stack trace and size of the allocation](https://github.com/golang/go/blob/f9ed2f75c43cb8745a1593ec3e4208c46419216a/src/runtime/mprof.go#L157) which can result in a lot of duplicate stack traces in the output.
 
 And sorting:

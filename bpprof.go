@@ -213,6 +213,29 @@ func Heap(w http.ResponseWriter, r *http.Request) {
 		pauseNs = append(pauseNs, d)
 	}
 
+	pausePause := make([]time.Duration, 0, len(s.PauseEnd)-1)
+	nextPause := time.Time{}
+	for i := (s.NumGC + 255) % 256; i > 0; i-- {
+		if s.PauseEnd[i] == 0 {
+			break
+		}
+		t := time.Unix(0, int64(s.PauseEnd[i]))
+		d := time.Duration(int64(s.PauseNs[i]))
+		if !nextPause.IsZero() {
+			pausePause = append(pausePause, nextPause.Sub(t))
+		}
+		nextPause = t.Add(-d)
+	}
+	for i := uint32(255); i > (s.NumGC+255)%256; i-- {
+		if s.PauseEnd[i] == 0 {
+			break
+		}
+		t := time.Unix(0, int64(s.PauseEnd[i]))
+		d := time.Duration(int64(s.PauseNs[i]))
+		pausePause = append(pausePause, nextPause.Sub(t))
+		nextPause = t.Add(-d)
+	}
+
 	fmt.Fprintf(tw, "\n# runtime.MemStats\n")
 	fmt.Fprintf(tw, "# Alloc = %d (%s)\n", s.Alloc, formatSize(int64(s.Alloc)))
 	fmt.Fprintf(tw, "# TotalAlloc = %d (%s)\n", s.TotalAlloc, formatSize(int64(s.TotalAlloc)))
@@ -236,6 +259,7 @@ func Heap(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(tw, "# NextGC = %d\n", s.NextGC)
 	fmt.Fprintf(tw, "# PauseNs = %v\n", pauseNs)
 	fmt.Fprintf(tw, "# PauseNsLongest = %v\n", pauseNsLongest)
+	fmt.Fprintf(tw, "# PausePause = %v\n", pausePause)
 	fmt.Fprintf(tw, "# NumGC = %d\n", s.NumGC)
 	fmt.Fprintf(tw, "# EnableGC = %v\n", s.EnableGC)
 	fmt.Fprintf(tw, "# DebugGC = %v\n", s.DebugGC)
