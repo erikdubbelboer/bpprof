@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/erikdubbelboer/bpprof"
 	_ "net/http/pprof"
+
+	_ "github.com/erikdubbelboer/bpprof/http"
 )
 
 var memSink interface{}

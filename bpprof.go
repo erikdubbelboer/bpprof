@@ -3,7 +3,6 @@ package bpprof
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"runtime"
 	"sort"
 	"strings"
@@ -14,10 +13,6 @@ import (
 var (
 	units = []string{"B", "KB", "MB", "GB", "TB"}
 )
-
-func init() {
-	http.Handle("/debug/bpprof/heap", http.HandlerFunc(Heap))
-}
 
 func formatSize(size int64) string {
 	s := float64(size)
@@ -98,7 +93,7 @@ func printStackRecord(w io.Writer, stk []uintptr, allFrames bool) {
 }
 
 // Based on: https://github.com/golang/go/blob/6b8762104a90c93ebd51149e7a031738832c5cdc/src/runtime/pprof/pprof.go#L387
-func Heap(w http.ResponseWriter, r *http.Request) {
+func Heap(w io.Writer, sortorder string) {
 	var p []runtime.MemProfileRecord
 	n, ok := runtime.MemProfile(nil, true)
 	for {
@@ -142,7 +137,7 @@ func Heap(w http.ResponseWriter, r *http.Request) {
 		p = append(p, r)
 	}
 
-	switch r.FormValue("sort") {
+	switch string(sortorder) {
 	default:
 		sort.Sort(byInUseBytes(p))
 	case "allocbytes":
