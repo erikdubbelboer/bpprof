@@ -49,6 +49,29 @@ func (x byInUseObjects) Len() int           { return len(x) }
 func (x byInUseObjects) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 func (x byInUseObjects) Less(i, j int) bool { return x[i].InUseObjects() > x[j].InUseObjects() }
 
+// ignoreStack returns true for stack frames associated with bpprof.
+func ignoreStack(stk []uintptr) bool {
+	for i, pc := range stk {
+		f := runtime.FuncForPC(pc)
+		if f != nil {
+			tracepc := pc
+			// Back up to call instruction.
+			if i > 0 && pc > f.Entry() {
+				if runtime.GOARCH == "386" || runtime.GOARCH == "amd64" {
+					tracepc--
+				} else {
+					tracepc -= 4 // arm, etc
+				}
+			}
+			file, _ := f.FileLine(tracepc)
+			if strings.Contains(file, "github.com/erikdubbelboer/bpprof") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // From: https://github.com/golang/go/blob/6b8762104a90c93ebd51149e7a031738832c5cdc/src/runtime/pprof/pprof.go#L326
 // printStackRecord prints the function + source line information
 // for a single stack trace.
@@ -112,6 +135,10 @@ func Heap(w io.Writer, sortorder string) {
 	pm := make(map[uintptr]runtime.MemProfileRecord, len(p))
 
 	for _, r := range p {
+		if ignoreStack(r.Stack()) {
+			continue
+		}
+
 		// Based on: https://github.com/golang/go/blob/f9ed2f75c43cb8745a1593ec3e4208c46419216a/src/runtime/mprof.go#L150
 		var h uintptr
 		for _, pc := range r.Stack0 {
